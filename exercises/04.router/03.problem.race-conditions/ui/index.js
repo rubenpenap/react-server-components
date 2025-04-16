@@ -4,8 +4,7 @@ import {
 	startTransition,
 	use,
 	useDeferredValue,
-	// 💰 you'll need this
-	// useRef,
+	useRef,
 	useState,
 	useTransition,
 } from 'react'
@@ -29,7 +28,7 @@ const initialLocation = getGlobalLocation()
 const initialContentPromise = createFromFetch(fetchContent(initialLocation))
 
 function Root() {
-	// 🐨 create a latestNav ref here which you can initialize to null if you like
+	const latestNav = useRef(null)
 	const [nextLocation, setNextLocation] = useState(getGlobalLocation)
 	const [contentPromise, setContentPromise] = useState(initialContentPromise)
 	const [isPending, startTransition] = useTransition()
@@ -38,12 +37,12 @@ function Root() {
 
 	function navigate(nextLocation, { replace = false } = {}) {
 		setNextLocation(nextLocation)
-		// 🐨 create a Symbol for this nav (💯 give it a descriptive label for debugging)
-		// 🐨 set the latestNav.current to this nav
+		const thisNav = Symbol(`Nav for ${nextLocation}`)
+		latestNav.current = thisNav
 
 		const nextContentPromise = createFromFetch(
 			fetchContent(nextLocation).then((response) => {
-				// 🐨 if the latestNav.current is no longer set to this nav, return early
+				if (thisNav !== latestNav.current) return
 				if (replace) {
 					window.history.replaceState({}, '', nextLocation)
 				} else {
