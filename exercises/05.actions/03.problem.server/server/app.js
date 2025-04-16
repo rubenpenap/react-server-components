@@ -8,8 +8,7 @@ import { trimTrailingSlash } from 'hono/trailing-slash'
 import { createElement as h } from 'react'
 import {
 	renderToPipeableStream,
-	// 💰 you'll need this
-	// decodeReply,
+	decodeReply,
 } from 'react-server-dom-esm/server'
 import { App } from '../ui/app.js'
 import { shipDataStorage } from './async-storage.js'
@@ -48,16 +47,13 @@ app.use(async (context, next) => {
 
 const moduleBasePath = new URL('../ui', import.meta.url).href
 
-// 🐨 add a returnValue argument here
-async function renderApp(context) {
+async function renderApp(context, returnValue) {
 	const shipId = context.req.param('shipId') || null
 	const search = context.req.query('search') || ''
 	const data = { shipId, search }
 	shipDataStorage.run(data, () => {
 		const root = h(App)
-		// 🐨 change the payload to an object that has { root, returnValue }
-		// 🦉 this will break the app until you update the ui/index.js file!
-		const payload = root
+		const payload = { root, returnValue }
 		const { pipe } = renderToPipeableStream(payload, moduleBasePath)
 		pipe(context.env.outgoing)
 	})
@@ -66,19 +62,20 @@ async function renderApp(context) {
 
 app.get('/rsc/:shipId?', async (context) => await renderApp(context))
 
-// 🐨 add an app.post to handle POST requests to /action/:shipId?
-// 💰 This isn't a hono.js workshop, so this'll get you started:
-// app.post('/action/:shipId?', async context => {})
-// 🐨 in the body of the POST handler, you'll want to:
-// 1. get the serverReference from the rsc-action header (💰 context.req.header('rsc-action'))
-// 2. split the serverReference by '#' to get the filepath and export name
-// 3. dynamically import the action from the filepath and name
-//    💰 (await import(filepath))[name]
-// 💯 Bonus: validate the action is a valid server reference. console.log(action.$$typeof) to see how you might determine that
-// 4. get the formData object from the quest (💰 await context.req.formData())
-// 5. decode the reply from the formData object (await decodeReply(formData, moduleBasePath))
-// 6. call the action with the ...args
-// 7. call renderApp with the context and the returnValue of the action
+app.post('/action/:shipId?', async (context) => {
+	const serverReference = context.req.header('rsc-action')
+	const [filepath, name] = serverReference.split('#')
+	const action = (await import(filepath))[name]
+
+	if (action.$$typeof !== Symbol.for('react.server.reference')) {
+		throw new Error('Invalid action')
+	}
+
+	const formData = await context.req.formData()
+	const args = await decodeReply(formData, moduleBasePath)
+	const result = await action(...args)
+	return await renderApp(context, result)
+})
 
 app.get('/:shipId?', async (context) => {
 	const html = await readFile('./public/index.html', 'utf8')

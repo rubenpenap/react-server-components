@@ -110,9 +110,7 @@ function Root() {
 				isPending,
 			},
 		},
-		// 🐨 the contentPromise is now an object with a root property, update this
-		// to render the root: 💰 use(contentPromise).root
-		use(contentPromise),
+		use(contentPromise).root,
 	)
 }
 
