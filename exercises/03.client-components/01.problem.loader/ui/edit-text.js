@@ -1,4 +1,4 @@
-// 💰 add the 'use client' directive here
+'use client'
 
 import { createElement as h, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
