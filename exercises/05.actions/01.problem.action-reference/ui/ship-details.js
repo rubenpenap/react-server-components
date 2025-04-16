@@ -1,28 +1,26 @@
 import { createElement as h } from 'react'
 import { getShip } from '../db/ship-api.js'
 import { shipDataStorage } from '../server/async-storage.js'
-// 🐨 bring in updateShipName from the './actions.js' file
+import { updateShipName } from './actions.js'
 import { EditableText } from './edit-text.js'
 import { getImageUrlForShip } from './img-utils.js'
 import { ShipImg } from './img.js'
 
-// 💰 you can log what extra properties the updateShipName function gets because
-// it's in a 'use server' file:
-// const properties = {}
-// for (const [key, descriptor] of Object.entries(
-// 	Object.getOwnPropertyDescriptors(updateShipName),
-// )) {
-// 	properties[key] = descriptor.value
-// }
+const properties = {}
+for (const [key, descriptor] of Object.entries(
+	Object.getOwnPropertyDescriptors(updateShipName),
+)) {
+	properties[key] = descriptor.value
+}
 
-// console.log(updateShipName.toString())
-// console.log(
-// 	JSON.stringify(
-// 		properties,
-// 		(key, value) => (typeof value === 'object' ? value : String(value)),
-// 		2,
-// 	),
-// )
+console.log(updateShipName.toString())
+console.log(
+	JSON.stringify(
+		properties,
+		(key, value) => (typeof value === 'object' ? value : String(value)),
+		2,
+	),
+)
 
 export async function ShipDetails() {
 	const { shipId } = shipDataStorage.getStore()
@@ -45,7 +43,7 @@ export async function ShipDetails() {
 				h(EditableText, {
 					key: shipId,
 					shipId,
-					// 🐨 add an action prop set to updateShipName
+					action: updateShipName,
 					initialValue: ship.name,
 				}),
 			),
