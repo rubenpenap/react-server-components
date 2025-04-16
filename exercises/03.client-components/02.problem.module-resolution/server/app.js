@@ -48,7 +48,7 @@ app.get('/rsc/:shipId?', async (context) => {
 	const data = { shipId, search }
 	shipDataStorage.run(data, () => {
 		const moduleBasePath = new URL('../ui', import.meta.url).href
-		const { pipe } = renderToPipeableStream(h(App, moduleBasePath))
+		const { pipe } = renderToPipeableStream(h(App), moduleBasePath)
 		pipe(context.env.outgoing)
 	})
 	return RESPONSE_ALREADY_SENT
