@@ -1,7 +1,6 @@
 'use client'
 
-// 🐨 bring in useActionState from 'react' here
-import { createElement as h, useRef, useState } from 'react'
+import { createElement as h, useActionState, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 
 const inheritStyles = {
@@ -12,27 +11,21 @@ const inheritStyles = {
 	textAlign: 'inherit',
 }
 
-// 🐨 accept an action prop
-export function EditableText({ id, shipId, initialValue = '' }) {
+export function EditableText({ action, id, shipId, initialValue = '' }) {
 	const [edit, setEdit] = useState(false)
 	const [value, setValue] = useState(initialValue)
-	// 🐨 get formState, formAction, and isPending from useActionState from react
-	// with the action from props
+	const [formState, formAction, isPending] = useActionState(action)
 	const inputRef = useRef(null)
 	const buttonRef = useRef(null)
 	return h(
 		'div',
-		// 🐨 set the style prop on this div to decrease the opacity when the form is submitting
-		// something like { opacity: isPending ? 0.6 : 1 } should work
-		null,
+		{ style: { opacity: isPending ? 0.6 : 1 } },
 		edit
 			? h(
 					'form',
 					{
-						// 🐨 add an action prop and set it to formAction
-						onSubmit: (event) => {
-							// 🐨 remove preventDefault here since the action handles this for you
-							event.preventDefault()
+						action: formAction,
+						onSubmit: () => {
 							setValue(inputRef.current?.value ?? '')
 							flushSync(() => {
 								setEdit(false)
@@ -91,17 +84,22 @@ export function EditableText({ id, shipId, initialValue = '' }) {
 		h(
 			'div',
 			{ position: 'relative' },
-			// 🐨 if we have formState, then display the formState.message here in a div
-			// 💯 make the color red if it's an error and green if it's not
-			// 💰 here are some handy styles for you:
-			// style: {
-			// 	position: 'absolute',
-			// 	left: 0,
-			// 	right: 0,
-			// 	color: formState.status === 'error' ? 'red' : 'green',
-			// 	fontSize: '0.75rem',
-			// 	fontWeight: 'normal',
-			// },
+			formState
+				? h(
+						'div',
+						{
+							style: {
+								position: 'absolute',
+								left: 0,
+								right: 0,
+								color: formState.status === 'error' ? 'red' : 'green',
+								fontSize: '0.75rem',
+								fontWeight: 'normal',
+							},
+						},
+						formState.message,
+					)
+				: null,
 		),
 	)
 }
